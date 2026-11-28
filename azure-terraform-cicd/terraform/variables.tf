@@ -15,6 +15,13 @@ variable "resource_group_name" {
   description = "Terraform training resource group"
   type        = string
   default     = "rg-terraform-training"
+
+}
+
+
+variable "frontend_ssh_public_key" {
+  description = "Frontend VM SSH public key"
+  type        = string
 }
 
 
