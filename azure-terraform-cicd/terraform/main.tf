@@ -239,3 +239,5 @@ output "backend_vm_private_ip" {
 output "backend_vm_name" {
   value = azurerm_linux_virtual_machine.backend_vm.name
 }
+
+
