@@ -49,3 +49,32 @@ steps:
   - bash: terraform validate -no-color
     workingDirectory: '$(terraformDirectory)'
     displayName: Terraform Validate
+
+
+
+  - task: AzureCLI@2
+    displayName: Terraform Plan using Azure WIF
+    inputs:
+      azureSubscription: 'azure-servieconnection'
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -euo pipefail
+
+        cd "$(terraformDirectory)"
+
+        echo "Checking Azure authentication"
+        az account show --output table
+
+        echo "Initializing remote backend"
+        terraform init -reconfigure -input=false -no-color
+
+        echo "Generating Terraform Plan"
+        terraform plan -input=false -no-color -lock-timeout=5m
+
+    env:
+      ARM_USE_CLI: 'true'
+      ARM_USE_AZUREAD: 'true'
+      TF_VAR_subscription_id: $(subscriptionId)
+      TF_VAR_backend_admin_password: $(backendAdminPassword)
+      TF_VAR_frontend_ssh_public_key: $(frontendSshPublicKey)
