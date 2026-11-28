@@ -1,0 +1,51 @@
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  terraformVersion: '1.9.8'
+  terraformDirectory: '$(Build.SourcesDirectory)/azure-terraform-cicd/terraform'
+
+steps:
+  - checkout: self
+
+  - bash: |
+      set -euo pipefail
+
+      VERSION="$(terraformVersion)"
+      ARCHIVE="terraform_${VERSION}_linux_amd64.zip"
+      CHECKSUMS="terraform_${VERSION}_SHA256SUMS"
+
+      curl -fsSLO "https://releases.hashicorp.com/terraform/${VERSION}/${ARCHIVE}"
+      curl -fsSLO "https://releases.hashicorp.com/terraform/${VERSION}/${CHECKSUMS}"
+
+      grep " ${ARCHIVE}$" "${CHECKSUMS}" | sha256sum -c -
+
+      unzip -oq "${ARCHIVE}"
+      sudo install -m 0755 terraform /usr/local/bin/terraform
+
+      terraform version
+
+    displayName: Install Terraform
+
+  - bash: terraform fmt -check -recursive
+    workingDirectory: '$(terraformDirectory)'
+    displayName: Terraform Format Check
+
+  - bash: terraform init -backend=false -input=false -no-color
+    workingDirectory: '$(terraformDirectory)'
+    displayName: Terraform Init
+
+  - bash: terraform validate -no-color
+    workingDirectory: '$(terraformDirectory)'
+    displayName: Terraform Validate
